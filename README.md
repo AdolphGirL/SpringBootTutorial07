@@ -19,7 +19,7 @@
   }
   ```
   AbstractSecurityWebApplicationInitializer 也是 WebApplicationInitializer 的實作類別之一，會在應用程式初始化時進行 DelegatingFilterProxy 過濾器的建立與設定。
-- step 1，
+- 基本配置，
   - 在沒有任何配置時，默認會自動生成登入頁面/login，而在啟動過程中會有一個``Using generated security password: 35b938e0-e519-4f9e-a060-33c83d10b7d8
 ``，輸入後即可登入。
   - 上述的部分也可以透過yml設定默認的帳號密碼
@@ -204,3 +204,83 @@
 	    web.ignoring().antMatchers("/webjars/**/*", "/**/*.css", "/**/*.js");
 	}
   ```
+#### spring security安全認證程式碼流程
+- Spring Security對於請求是經過一系列Filter進行攔截的，其中用戶登錄驗證這類的處理都是在UsernamePasswordAuthenticationFilter中，它繼承自AbstractAuthenticationProcessingFilter。``org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.calss``，其中獲取form請求的usernameParameter為username、passwordParameter為password，將獲取到的資料生成一個``UsernamePasswordAuthenticationToken``對象，将这个对象塞进``AuthenticationManager``对象并返回，注意：此时的authRequest的权限是没有任何值的。
+```
+org.springframework.security.authentication.UsernamePasswordAuthenticationToken.class
+
+public UsernamePasswordAuthenticationToken(Object principal, Object credentials) {
+		super(null);
+		this.principal = principal;
+		this.credentials = credentials;
+		setAuthenticated(false);
+	}
+```
+UsernamePasswordAuthenticationToken是继承于Authentication，它是处理登录成功回调方法中的一个参数，里面包含了用户信息、请求信息等参数。
+```
+AuthenticationManager是一个接口，他有很多實現類，其中最重要的一個為ProviderManager，this.getAuthenticationManager().authenticate(authRequest)取回的就是該實現類。
+
+ProviderManager，原碼內
+
+这里首先通过 provider 判断是否支持当前传入进来的Authentication，目前我们使用的是UsernamePasswordAuthenticationToken，因为除了帐号密码登录的方式，还会有其他的方式，比如JwtAuthenticationToken
+```
+- 整體詳解，參考https://www.cnblogs.com/mujingyu/p/10702267.html
+- 高度概括起来本章节所有用的核心认证相关接口：SecurityContextHolder是
+  身份信息的存放容器，Authentication是身份信息的抽象，AuthenticationManager是身份认证器，一般常用的是用户名+密码的身份认证器，还有其它认证器，如邮箱+密码、手机号码+密码等。
+- 獲取用戶資料
+  ```
+    @GetMapping("/me1")
+    @ResponseBody
+    public Object getMeDetail() {
+        return SecurityContextHolder.getContext().getAuthentication();
+    }
+
+    @GetMapping("/me2")
+    @ResponseBody
+    public Object getMeDetail(Authentication authentication){
+        return authentication;
+    }
+
+    在登录成功之后，上面有两种方式来获取，访问上面的请求，就会获取用户全部的校验信息，包括ip地址等信息
+  ```
+  ```
+  如果我们只想获取用户名和密码以及它的权限，不需要ip地址等太多的信息可以使用下面的方式来获取信息
+
+  @GetMapping("/me3")
+  @ResponseBody
+  public Object getMeDetail(@AuthenticationPrincipal UserDetails userDetails){
+      return userDetails;
+  }
+  ```
+#### spring security 錯誤處理
+- 我們就知道了，頁面上可以通過session獲取SPRING_SECURITY_LAST_EXCEPTION來獲取異常信息
+，因為這里session中保存的是AuthenticationException對象，我們再來看下保存的異常對象。
+- ```
+  In Thymeleaf, you don't access session variables using the sessionScope token name. You use session instead. So you need to do something like:
+
+  <div class="error" 
+      th:if="${param.login_error}"
+      th:with="errorMsg=${session["SPRING_SECURITY_LAST_EXCEPTION"].message}">
+    Your login attempt was not successful, try again.<br />
+    Reason: <span th:text="${errorMsg}">Wrong input!</span> 
+  </div>
+
+  The param.login_error is a request parameter created by Spring Security after a login error.
+  ```
+- 補充一下，在SpringSecurity中，關於登錄的異常有以下幾個：
+
+  UsernameNotFoundException 用戶找不到
+
+  BadCredentialsException 壞的憑據
+
+  AccountStatusException 用戶狀態異常它包含如下子類
+
+  AccountExpiredException 賬戶過期
+
+  LockedException 賬戶鎖定
+
+  DisabledException 賬戶不可用
+
+  CredentialsExpiredException 證書過期
+
+  這里的話這些提示信息是可以定制的，在spring-security-core-xx內的message_xx.properties
