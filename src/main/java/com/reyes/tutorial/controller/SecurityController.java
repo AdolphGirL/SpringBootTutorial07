@@ -15,4 +15,10 @@ public class SecurityController {
 	public String home(){
 		return "home";
 	}
+	
+	@GetMapping(value = "/hello")
+	public String hello(){
+		return "hello";
+	}
+	
 }

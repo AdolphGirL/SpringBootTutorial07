@@ -27,21 +27,29 @@
 							class="fab fa-google-plus-square"></i></span> <span><i
 							class="fab fa-twitter-square"></i></span>
 					</div>
+					
+					<div th:if="${param.error}" class="justify-content-center links">
+						Invalid username and password.
+					</div>
+					
+					<div th:if="${param.logout}" class="justify-content-center links">
+						You have been logged out.
+					</div>
 				</div>
 				<div class="card-body">
-					<form>
+					<form th:action="@{/login}" method="POST">
 						<div class="input-group form-group">
 							<div class="input-group-prepend">
 								<span class="input-group-text"><i class="fas fa-user"></i></span>
 							</div>
-							<input type="text" class="form-control" placeholder="username">
+							<input type="text" class="form-control" name="username" placeholder="username">
 
 						</div>
 						<div class="input-group form-group">
 							<div class="input-group-prepend">
 								<span class="input-group-text"><i class="fas fa-key"></i></span>
 							</div>
-							<input type="password" class="form-control"
+							<input type="password" class="form-control" name="password"
 								placeholder="password">
 						</div>
 						<div class="row align-items-center remember">

@@ -54,17 +54,23 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 	}
 **/
 	
-//	第三種方式，撰寫loadUserByUsername(此處配置後，就可以不用配置protected void configure(AuthenticationManagerBuilder auth)
-	
-	
-//	第四種方式，最佳實現，將加密類型抽離、自行實現UserDetailsService，並且注入AuthenticationManagerBuilder類別中
-	@Autowired
-	private OverrideUserDetailsService overrideUserDetailsService;
-	
 	@Override
 	protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-		auth.userDetailsService(overrideUserDetailsService).passwordEncoder(passwordEncoder());
+		auth.inMemoryAuthentication()
+//		官方推薦，使用BCrypt編碼，抽離BCryptPasswordEncoder()
+			.withUser("admin").password(new BCryptPasswordEncoder().encode("admin")).roles("ADMIN");
 	}
+	
+//	第三種方式，撰寫loadUserByUsername(此處配置後，就可以不用配置protected void configure(AuthenticationManagerBuilder auth)
+	
+//	第四種方式，最佳實現，將加密類型抽離、自行實現UserDetailsService，並且注入AuthenticationManagerBuilder類別中
+//	@Autowired
+//	private OverrideUserDetailsService overrideUserDetailsService;
+	
+//	@Override
+//	protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+//		auth.userDetailsService(overrideUserDetailsService).passwordEncoder(passwordEncoder());
+//	}
 	
 	@Bean
 	public BCryptPasswordEncoder passwordEncoder() {
@@ -76,24 +82,33 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 	 */
 	@Override
 	protected void configure(HttpSecurity http) throws Exception {
+//		http
+//			// 需要用戶登入時，會轉到的登入頁面
+//			.formLogin()
+//			// 設置登入頁面
+//			.loginPage("/login")
+//			// 自訂義的登入接口
+//			.loginProcessingUrl("/user/login")
+//			// 登入成功後的頁面
+//			.defaultSuccessUrl("/home").permitAll()
+//			.and()
+//			// 設置需要驗證、與不需要驗證的頁面(目前暫時設定不需要驗證、其餘都要驗證)
+//			.authorizeRequests()
+//			// 不需要驗證的頁面
+//			.antMatchers("/", "/index", "/user/login").permitAll()
+//			// 認證後，任何請求都可以訪問
+//			.anyRequest().authenticated()
+//			// 關閉csrf
+//			.and().csrf().disable();
+		
 		http
-			// 需要用戶登入時，會轉到的登入頁面
-			.formLogin()
-			// 設置登入頁面
-			.loginPage("/login")
-			// 自訂義的登入接口
-			.loginProcessingUrl("/user/login")
-			// 登入成功後的頁面
-			.defaultSuccessUrl("/home").permitAll()
-			.and()
-			// 設置需要驗證、與不需要驗證的頁面(目前暫時設定不需要驗證、其餘都要驗證)
-			.authorizeRequests()
-			// 不需要驗證的頁面
-			.antMatchers("/", "/index", "/user/login").permitAll()
-			// 認證後，任何請求都可以訪問
-			.anyRequest().authenticated()
-			// 關閉csrf
-			.and().csrf().disable();
+			.authorizeRequests().antMatchers("/", "/home").permitAll()
+				.anyRequest().authenticated()
+				.and()
+			.formLogin().loginPage("/login").permitAll()
+				.and()
+			.logout().permitAll();
+		
 	}
 	
 	// 靜態資源不需要驗證(針對static目錄下)
@@ -104,4 +119,5 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 //	    web.ignoring().antMatchers("/webjars/**/*", "/**/*.css", "/**/*.js");
 		web.ignoring().antMatchers("/webjars/**", "/css/**", "/js/**");
 	}
+	
 }
