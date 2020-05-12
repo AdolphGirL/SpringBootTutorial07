@@ -76,5 +76,51 @@
 - 默認測試，使用者提交username、password表單，在spring security，當沒有配置登入頁面時，會自動升成一個登入頁面。 
 - 驗證失敗會/login?error、登出會login?logout
 
+#### 核心配置說明
+- WebSecurityConfigurerAdapter，可以選擇性覆蓋一些想要實現的設定  
+  ```
+  @Configuration
+  @EnableWebSecurity
+  public class CustomWebSecurityConfig extends WebSecurityConfigurerAdapter {
+    
+      @Override
+      protected void configure(HttpSecurity http) throws Exception {
+          http
+              .authorizeRequests()
+                  .antMatchers("/resources/**", "/signup", "/about").permitAll()
+                  .antMatchers("/admin/**").hasRole("ADMIN")
+                  .antMatchers("/db/**").access("hasRole('ADMIN') and hasRole('DBA')")
+                  .anyRequest().authenticated()
+                  .and()
+              .formLogin()
+                  .usernameParameter("username")
+                  .passwordParameter("password")
+                  .failureForwardUrl("/login?error")
+                  .loginPage("/login")
+                  .permitAll()
+                  .and()
+              .logout()
+                  .logoutUrl("/logout")
+                  .logoutSuccessUrl("/index")
+                  .permitAll()
+                  .and()
+              .httpBasic()
+                  .disable();
+      }
+  }
+  ```
+  authorizeRequests()，配置路徑攔截、表明訪問的權限等  
+  formLogin()，對應表單登入的配置  
+  logout()，對應登出的相關配置  
+  httpBasic()，可以配置basic登入
 
+- @EnableWebSecurity，透過import引入外部的配置類(如WebSecurityConfiguration)
+
+#### 過濾器說明
+- Spring Security使用了springSecurityFillterChian(在WebSecurityConfiguration.class)，作為安全過濾的入口
+- SecurityContextPersistenceFilter(org.springframework.security.web.context.SecurityContextPersistenceFilter)，用戶訊息會經過此filter進而保存到SecurityContextHolder。請求來臨時創建SecurityContext安全上下文，請求結束時，清空SecurityContextHolder
+- UsernamePasswordAuthenticationFilter，org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter；一些代碼至於AbstractAuthenticationProcessingFilter中；流程上調用authenticationManager進行驗證，驗證成功執行successfulAuthentication，驗證失敗執行unsuccessfulAuthentication，而不管驗證成功或失敗，都會經由轉發或者重新定位處理請求，交由AuthenticationSuccessHandler 和 AuthenticationFailureHandler封裝處理
+- AnonymousAuthenticationFilter，匿名任制過濾器，針對未登入者，有自己的一套流程
+- ExceptionTranslationFilter，異常轉換過濾器。本身不處理異常，交由別的處理，只做轉換動作；一般處理兩大異常AccessDeniedException(訪問異常)和AuthenticationException(認證異常)。
+- FilterSecurityInterceptor，資源角色的檢核。
   
