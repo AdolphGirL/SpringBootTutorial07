@@ -55,6 +55,16 @@
   UserDetailsService和AuthenticationProvider的職責不相同，UserDetailsService只負責特定的地方(通常是資料庫)去加載用戶資料封裝為UserDetails。UserDetailsService常見的實現類JdbcDaoImpl、InMemoryUserDetailsManager。。也可以自行實現。
 
 #### 配置
+- 基本情況  
+  在新版的spring security，沒有任何配置的情況下或默認產稱一個login頁面，而在啟動的過程中，會有有一個``Using generated security password: 35b938e0-e519-4f9e-a060-33c83d10b7d8``，輸入後即可登入；另外也可以透過yml檔設定默認的帳號密碼。  
+  ```
+  spring:
+    security:
+      user:
+        name: 'admin'
+        password: 'admin'
+  ```
+- 新版的spring security針對於密碼的部分，都需要加密處理，官方推薦使用bcrypt加密方式，new BCryptPasswordEncoder()
 - @EnableWebSecurity(@EnableWebSecurity註解已隱含@Configuration，所以不用特別聲明)，聲明後，集成了spring security對web的支持；
 - configure(HttpSecurity)，可以定義那些url需要被攔截，需要登入等等設定
 - configure(WebSecurity web)，設定靜態資源不需要驗證(針對static目錄下)，完全繞過spring security的所有filter；ingore是完全繞過spring security的所有filter，permitall，沒有繞過spring security的所有filter
