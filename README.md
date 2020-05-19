@@ -134,3 +134,5 @@
 - ExceptionTranslationFilter，異常轉換過濾器。本身不處理異常，交由別的處理，只做轉換動作；一般處理兩大異常AccessDeniedException(訪問異常)和AuthenticationException(認證異常)。
 - FilterSecurityInterceptor，資源角色的檢核。
   
+#### 原碼認證過程  
+- http://www.spring4all.com/article/439
