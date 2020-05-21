@@ -135,4 +135,34 @@
 - FilterSecurityInterceptor，資源角色的檢核。
   
 #### 原碼認證過程  
-- http://www.spring4all.com/article/439
+- http://www.spring4all.com/article/439  
+
+#### 源碼授權過程，幾個重要的filter
+- org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter，最先遇到的filter；會先調用父類AbstractAuthenticationProcessingFilter.doFilter()，再調用自行實現的attemptAuthentication，attemptAuthentication驗證部分源碼  
+  ```
+  if (postOnly && !request.getMethod().equals("POST")) {
+		throw new AuthenticationServiceException(
+				"Authentication method not supported: " + request.getMethod());
+	}
+
+  取出request資料
+  String username = obtainUsername(request);
+	String password = obtainPassword(request);
+
+  封裝為UsernamePasswordAuthenticationToken
+  UsernamePasswordAuthenticationToken authRequest = new UsernamePasswordAuthenticationToken(
+				username, password);
+
+  最後返回透過AuthenticationManager的實現類驗證後，返回驗證結果，給父類
+  return this.getAuthenticationManager().authenticate(authRequest);
+  ```
+- org.springframework.security.web.authentication.AnonymousAuthenticationFilter，當在其前面的過濾器都沒有成功時，spring security則會在當前的SecurityContextHolder中添加一個Authenticaiton的匿名實現類別AnonymousAuthenticationToken。用戶名為anonymousUser、授權為ROLE_ANONYMOUS
+- org.springframework.security.web.access.ExceptionTranslationFilter，異常處理過濾器，主要是用來處理系統在認證授權過程中拋出的異常，主要處理AuthenticationException 和 AccessDeniedException
+- org.springframework.security.web.access.intercept.FilterSecurityInterceptor，最後一個filter，處理真正請求；其會調用``InterceptorStatusToken token = super.beforeInvocation(fi);``中的beforeInvocation，該過程會再去調用AccessDecisionManager來驗證當前的用戶使否有授權動作，可以訪問目前的資源。在beforeInvocation源碼中有一段  
+```
+this.accessDecisionManager.decide(authenticated, object, attributes);
+```
+authenticated，表示當前認證的Authentication  
+object，表示為當前的請求(/xxx)  
+attributes，就是當前的資源去匹配我們定義的匹配規則  
+- AccessDecisionManager授權。
