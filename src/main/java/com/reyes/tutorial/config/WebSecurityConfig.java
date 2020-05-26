@@ -9,10 +9,14 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-
 import com.reyes.tutorial.service.OverrideUserDetailsService;
 
-// @EnableWebSecurity註解已隱含@Configuration，所以不用特別聲明
+/**
+ * @EnableWebSecurity註解已隱含@Configuration，所以不用特別聲明
+ * 繼承WebSecurityConfigurerAdapter，創建WebSecurityConfigurer的實例
+ *
+ */
+
 @EnableWebSecurity
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
@@ -54,6 +58,9 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 	}
 **/
 	
+	/**
+	 * 提供需要驗證的資料
+	 */
 	@Override
 	protected void configure(AuthenticationManagerBuilder auth) throws Exception {
 		auth.inMemoryAuthentication()
@@ -78,7 +85,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 	}
 	
 	/**
-	 * 自訂義安全認證
+	 * 自訂義需要安全認證
 	 */
 	@Override
 	protected void configure(HttpSecurity http) throws Exception {
@@ -102,21 +109,23 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 //			.and().csrf().disable();
 		
 		http
-			.authorizeRequests().antMatchers("/", "/home").permitAll()
+			.authorizeRequests().antMatchers("/").permitAll()
 				.anyRequest().authenticated()
 				.and()
-			.formLogin().loginPage("/login").permitAll()
+			.formLogin().loginPage("/login").defaultSuccessUrl("/home")
 				.and()
 			.logout().permitAll();
 		
 	}
 	
-	// 靜態資源不需要驗證(針對static目錄下)
-	// ingore是完全繞過spring security的所有filter
-	// permitall，沒有繞過spring security的所有filter
+	/**
+	 * 靜態資源不需要驗證(針對static目錄下)
+	 * ingore是完全繞過spring security的所有filter
+	 * permitall，沒有繞過spring security的所有filter
+	 */
 	@Override
 	public void configure(WebSecurity web) throws Exception {
-//	    web.ignoring().antMatchers("/webjars/**/*", "/**/*.css", "/**/*.js");
+//		web.ignoring().antMatchers("/webjars/**/*", "/**/*.css", "/**/*.js");
 		web.ignoring().antMatchers("/webjars/**", "/css/**", "/js/**");
 	}
 	
