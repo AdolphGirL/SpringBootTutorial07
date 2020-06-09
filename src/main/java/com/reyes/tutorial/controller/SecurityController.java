@@ -16,9 +16,4 @@ public class SecurityController {
 		return "home";
 	}
 	
-	@GetMapping(value = "/hello")
-	public String hello(){
-		return "hello";
-	}
-	
 }

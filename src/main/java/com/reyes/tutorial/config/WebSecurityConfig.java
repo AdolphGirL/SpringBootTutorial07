@@ -59,14 +59,15 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 **/
 	
 	/**
+	 * 第二種方式
 	 * 提供需要驗證的資料
 	 */
-	@Override
-	protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-		auth.inMemoryAuthentication()
-//		官方推薦，使用BCrypt編碼，抽離BCryptPasswordEncoder()
-			.withUser("admin").password(new BCryptPasswordEncoder().encode("admin")).roles("ADMIN");
-	}
+//	@Override
+//	protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+//		auth.inMemoryAuthentication()
+////		官方推薦，使用BCrypt編碼，抽離BCryptPasswordEncoder()
+//			.withUser("admin").password(new BCryptPasswordEncoder().encode("admin")).roles("ADMIN");
+//	}
 	
 //	第三種方式，撰寫loadUserByUsername(此處配置後，就可以不用配置protected void configure(AuthenticationManagerBuilder auth)
 	
@@ -109,13 +110,17 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 //			.and().csrf().disable();
 		
 		http
-			.authorizeRequests().antMatchers("/").permitAll()
+			.authorizeRequests().antMatchers("/", "/index", "/user/login").permitAll()
 				.anyRequest().authenticated()
-				.and()
-			.formLogin().loginPage("/login").defaultSuccessUrl("/home")
-				.and()
-			.logout().permitAll();
-		
+			.and()
+				.formLogin()
+//				TODO 未確定loginPage vs loginProcessingUrl 
+					.loginPage("/login")
+					.loginProcessingUrl("/user/login")
+					.defaultSuccessUrl("/home").permitAll()
+			.and()
+				.logout().permitAll()
+			.and().csrf().disable();
 	}
 	
 	/**
