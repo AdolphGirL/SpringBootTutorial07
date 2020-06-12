@@ -72,13 +72,13 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 //	第三種方式，撰寫loadUserByUsername(此處配置後，就可以不用配置protected void configure(AuthenticationManagerBuilder auth)
 	
 //	第四種方式，最佳實現，將加密類型抽離、自行實現UserDetailsService，並且注入AuthenticationManagerBuilder類別中
-//	@Autowired
-//	private OverrideUserDetailsService overrideUserDetailsService;
+	@Autowired
+	private OverrideUserDetailsService overrideUserDetailsService;
 	
-//	@Override
-//	protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-//		auth.userDetailsService(overrideUserDetailsService).passwordEncoder(passwordEncoder());
-//	}
+	@Override
+	protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+		auth.userDetailsService(overrideUserDetailsService).passwordEncoder(passwordEncoder());
+	}
 	
 	@Bean
 	public BCryptPasswordEncoder passwordEncoder() {
@@ -117,7 +117,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 //				TODO 未確定loginPage vs loginProcessingUrl 
 					.loginPage("/login")
 					.loginProcessingUrl("/user/login")
-					.defaultSuccessUrl("/home").permitAll()
+					.defaultSuccessUrl("/home").permitAll()		// .permitAll()不加上似乎會產生ERR_TOO_MANY_REDIRECTS
 			.and()
 				.logout().permitAll()
 			.and().csrf().disable();
