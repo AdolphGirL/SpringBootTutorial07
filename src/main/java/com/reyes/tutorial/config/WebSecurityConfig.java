@@ -9,6 +9,9 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+import com.reyes.tutorial.filter.SecurityBeforeLoginFilter;
 import com.reyes.tutorial.service.OverrideUserDetailsService;
 
 /**
@@ -121,6 +124,17 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 			.and()
 				.logout().permitAll()
 			.and().csrf().disable();
+		
+//		配置自訂義的Filter在spring security過濾器鏈中的位置
+//		addFilterBefore(Filter filter, Class<? extends Filter> beforeFilter)，添加在某個filter之前
+//			ex: http.addFilterBefore(new BeforeLoginFilter(), UsernamePasswordAuthenticationFilter.class)，在UsernamePasswordAuthenticationFilter之前
+//		addFilterAfter(Filter filter, Class<? extends Filter> afterFilter)，添加在某個filter之後
+//			ex:  http.addFilterAfter(new AfterCsrfFilter(), CsrfFilter.class); -> 在CsrfFilter.class之後
+//		addFilterAt(Filter filter, Class<? extends Filter> atFilter)，添加在某個filter相同位置，但不會覆蓋
+//			ex: http.addFilterAt(new AfterCsrfFilter(), LogoutFilter.class); -> 在LogoutFilter.class相同
+		
+		http.addFilterBefore(new SecurityBeforeLoginFilter(), UsernamePasswordAuthenticationFilter.class);
+		
 	}
 	
 	/**
