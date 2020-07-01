@@ -166,3 +166,75 @@ authenticated，表示當前認證的Authentication
 object，表示為當前的請求(/xxx)  
 attributes，就是當前的資源去匹配我們定義的匹配規則  
 - AccessDecisionManager授權。
+
+#### 登出
+- basic configuration - using the logout() method is simple enough  
+  ```
+   protected void configure(final HttpSecurity http) throws Exception {
+     http
+        //...
+        .logout()
+        //...
+   }
+
+   在頁面的link使用url /logout
+  ```
+- Advanced Customizations - 客製化設定
+  - logoutSuccessUrl()  
+    ```
+    .logout()
+    .logoutSuccessUrl("/afterlogout.html")
+
+    Depending on the application, a good practice is to redirect the user back to the login page
+    .logout()
+    .logoutSuccessUrl("/login.html")
+
+    預設也是導回首頁
+    ```
+  - logoutUrl()，自訂義登出url  
+    ```
+    Similar to other defaults in Spring Security, 
+    the URL that actually triggers the logout mechanism has a default as well – /logout.
+    It is, however, a good idea to change this default value, 
+    to make sure that no information is published about what framework is used to secure the application:
+
+    .logout()
+    .logoutUrl("/perform_logout")
+    ```
+  - invalidateHttpSession and deleteCookies
+    - invalidateHttpSession allows the session to be set up so that it's not invalidated when logout occurs (it's true by default)  
+      ```
+      .logout()
+      .logoutUrl("/perform_logout"
+      .invalidateHttpSession(true)
+      .deleteCookies("JSESSIONID")
+      ```
+  #### 記住我
+  - 兩種實現，hashcode產生cookie，或者寫入db、其他永久機制
+  - cookie  
+    ```
+    base64(username + ":" + expirationTime + ":" +
+    md5Hex(username + ":" + expirationTime + ":" password + ":" + key))
+
+    username:          As identifiable to the UserDetailsService
+    password:          That matches the one in the retrieved UserDetails
+    expirationTime:    The date and time when the remember-me token expires, expressed in milliseconds
+    key:               A private key to prevent modification of the remember-me token
+    ```  
+    cookie需要留意，如果被代理取得則有安全疑慮，最好還是使用persistent remember-me token的方法
+  - 配置  
+    ```
+    protected void configure(HttpSecurity http) throws Exception {
+      http.
+          ....
+          .and()
+            .rememberMe()
+            .key("unique-and-secret")
+            .rememberMeCookieName("remember-me-cookie-name")
+            .tokenValiditySeconds(24 * 60 * 60);
+    }
+
+    頁面使用 name = 'remember-me'
+    <input id="remember-me" name="remember-me" type="checkbox"/> Remember me
+    ```
+

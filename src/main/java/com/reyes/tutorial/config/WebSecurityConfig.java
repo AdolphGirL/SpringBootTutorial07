@@ -122,7 +122,18 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 					.loginProcessingUrl("/user/login")
 					.defaultSuccessUrl("/home").permitAll()		// .permitAll()不加上似乎會產生ERR_TOO_MANY_REDIRECTS
 			.and()
-				.logout().permitAll()
+				.logout()
+//				.logoutSuccessUrl("/index")
+				.invalidateHttpSession(true)
+				.deleteCookies("JSESSIONID")
+				.permitAll()
+			.and()
+				.rememberMe()
+					.key("unique-and-secret")
+					.rememberMeCookieName("remember-me-cookie-name")
+//					.tokenValiditySeconds(24 * 60 * 60)
+//					10分鐘
+					.tokenValiditySeconds(10 * 60)			
 			.and().csrf().disable();
 		
 //		配置自訂義的Filter在spring security過濾器鏈中的位置
